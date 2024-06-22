@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .result-container {
+            max-height: 400px; /* Set a maximum height for the result container */
+            overflow-y: auto; /* Enable vertical scrolling */
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Content Generator</h1>
+    
+    <textarea id="inputText" rows="5" cols="50" placeholder="Enter your input text"></textarea>
+    <br><br>
+    <button onclick="generateContent()">Generate Content</button>
+
+    <div class="result-container" id="result">
+        <!-- Result will be displayed here -->
+    </div>
+
+    <script>
+        async function generateContent() {
+            const inputText = document.getElementById('inputText').value.trim();  // Trim whitespace
+            const button = document.querySelector('button');
+            const resultDiv = document.getElementById('result');
+
+            if (!inputText) {
+                alert('Please enter some text');
+                return;
+            }
+
+            button.disabled = true;
+            resultDiv.innerHTML = 'Generating...';
+
+            try {
+                const response = await fetch('/generate-content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: inputText })  // Ensure 'text' matches the expected field name
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                // Convert markdown-like syntax to HTML tags
+                const formattedText = convertMarkdownToHtml(data.text);
+                resultDiv.innerHTML = formattedText;
+            } catch (error) {
+                resultDiv.innerHTML = 'Error generating content';
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function convertMarkdownToHtml(text) {
+            // Replace markdown-like syntax with HTML tags
+            const formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Convert **text** to <strong>text</strong>
+                .replace(/\n/g, '<br>');  // Convert newlines to <br> tags
+
+            return formattedText;
+        }
+    </script>
+</body>
+</html>
